@@ -9,26 +9,39 @@ Agent skills published by [Tinloof](https://tinloof.com), installable with the
 npx skills add tinloof/skills
 ```
 
-This installs the skills below into your project's `.claude/skills/`. Your agent
-then picks them up automatically.
+This installs the skills below into your project (`.agents/skills/`, symlinked for
+Claude Code, Cursor, and others). Your agent picks them up automatically — just ask
+it to set the skill up.
 
 ## Skills
 
-### `setup-gh-env-aliases`
+### `genv`
 
-Installs three GitHub CLI aliases for managing a repo's **GitHub Actions
-configuration** from the command line:
+A focused GitHub CLI wrapper for managing a repo's **GitHub Actions configuration**
+without the noise of all of `gh`'s other commands. It installs a single `genv`
+command:
 
-| Alias | What it does |
+| Command | What it does |
 | --- | --- |
-| `gh env-pull [-e <env>] [-f <file>]` | GitHub **variables** → dotenv file (default `.env`) |
-| `gh env-push [-e <env>] [-f <file>]` | dotenv file → GitHub **variables** |
-| `gh secret-set <NAME> [value] [--fallback <v>] [-e <env>]` | set a **secret**, plus an optional same-named fallback variable |
+| `genv pull [-e <env>] [-f <file>]` | Write GitHub **variables** → dotenv file (default `.env`) |
+| `genv push [-e <env>] [-f <file>]` | Set GitHub **variables** from a dotenv file |
+| `genv secret <NAME> [value] [--fallback <v>] [-e <env>]` | Set a **secret**, with an optional same-named fallback variable |
 
-No `-e` targets repository-level config; `-e <name>` targets an environment
-(e.g. `production`). Secrets are write-only; pair a secret with a `--fallback`
-variable and resolve it in a workflow as `${{ secrets.NAME || vars.NAME }}`.
+- No `-e` targets **repository-level** config; `-e <name>` targets an **environment** (e.g. `production`).
+- **Secrets are write-only.** Pair a secret with a `--fallback` variable and resolve it in a workflow as `${{ secrets.NAME || vars.NAME }}`.
+- Omit the secret value to read it from **stdin** (keeps it out of shell history): `printf '%s' "$TOKEN" | genv secret API_KEY -e production`.
+- `push` / `secret` **create the environment automatically** if it doesn't exist (a notice is printed, so a typo'd env name is visible).
+- `genv --help` and `genv <command> --help` document everything.
 
-After installing, just ask your agent to **"set up the gh env aliases"** — the
-skill checks that `gh` is installed and authenticated, then runs its bundled
-`install.sh`.
+**Setup** — ask your agent to *"set up genv"*, or run the bundled installer directly:
+
+```sh
+bash <skill-dir>/install.sh
+```
+
+It verifies `gh` is installed and authenticated, then drops `genv` into
+`~/.local/bin` (override with `GENV_BIN_DIR=/some/dir`).
+
+**Requirements** — the [GitHub CLI](https://cli.github.com) (`gh`), authenticated
+via `gh auth login`, and a `bash` shell. On Windows that means **Git Bash or WSL**;
+`genv` is a bash script and won't run in native PowerShell/cmd.
