@@ -1,6 +1,6 @@
 ---
 name: genv
-description: Install `genv`, a focused GitHub CLI wrapper for managing a repo's GitHub Actions environment variables and secrets — `genv pull`/`genv push` sync variables to/from .env files, and `genv secret` sets secrets with optional fallback variables. Use when someone wants to install or set up genv, manage GitHub Actions env vars/secrets from the command line, or sees "command not found: genv".
+description: Install `genv`, a focused GitHub CLI wrapper for managing a repo's GitHub Actions environment variables and secrets — `genv pull`/`genv push` sync variables to/from .env files, and `genv secret` sets secrets with optional fallback variables. Use when someone wants to install or set up genv, manage GitHub Actions env vars/secrets from the command line, or when the genv command is not found.
 ---
 
 # Setup: genv
