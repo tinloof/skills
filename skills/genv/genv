@@ -18,6 +18,19 @@ require_gh() {
   }
 }
 
+# Create the environment if it doesn't already exist — writes (push/secret) need
+# it to exist, and GitHub won't auto-create it. PUT is idempotent.
+ensure_env() {
+  if gh api "repos/{owner}/{repo}/environments/$1" >/dev/null 2>&1; then
+    return 0
+  fi
+  printf 'genv: environment "%s" does not exist — creating it\n' "$1" >&2
+  if ! gh api --method PUT "repos/{owner}/{repo}/environments/$1" >/dev/null 2>&1; then
+    err "failed to create environment \"$1\" (do you have admin access to the repo?)"
+    return 1
+  fi
+}
+
 usage() {
   cat <<'EOF'
 genv — GitHub Actions env vars & secrets, without the noise
@@ -70,6 +83,7 @@ USAGE
   -e, --env <name>    Environment to write to (default: repository-level)
   -f, --file <path>   Input dotenv file (default: .env)
 
+The environment is created automatically if it doesn't exist.
 Only adds/updates the keys in the file; never deletes variables you removed.
 EOF
 }
@@ -86,7 +100,7 @@ USAGE
                      of your shell history)
   --fallback <value> Also set a same-named variable, so a workflow can use:
                        ${{ secrets.NAME || vars.NAME }}
-  -e, --env <name>   Environment (default: repository-level)
+  -e, --env <name>   Environment (default: repository-level; created if missing)
 
 EXAMPLES
   genv secret API_KEY sk-real --fallback sk-dummy -e production
@@ -122,6 +136,7 @@ cmd_push() {
   done
   [ -f "$f" ] || { err "push: file not found: $f"; return 1; }
   require_gh
+  if [ -n "$e" ]; then ensure_env "$e"; fi
   gh variable set --env-file "$f" ${e:+--env "$e"}
   printf '✓ pushed %s to %s\n' "$f" "${e:-repo}"
 }
@@ -140,6 +155,7 @@ cmd_secret() {
   done
   [ -n "$n" ] || { err "secret: missing secret NAME"; echo >&2; usage_secret >&2; return 2; }
   require_gh
+  if [ -n "$e" ]; then ensure_env "$e"; fi
   if [ -n "$vset" ]; then
     gh secret set "$n" -b "$v" ${e:+--env "$e"}
   else

@@ -97,6 +97,7 @@ printf '%s' "sk-real" | genv secret API_KEY -e production # pipe it in (stays ou
 Notes:
 - **Keep secret values out of shell history**: omit the value argument and pipe/redirect it via stdin (a single trailing newline is trimmed automatically).
 - Secrets are write-only — there is intentionally no "pull" for secrets. `genv pull` only ever returns variables.
+- `genv push` and `genv secret` **create the target environment automatically** if it doesn't exist yet (a notice is printed so a typo'd env name is visible).
 - `genv push` and `genv secret --fallback` only add/update the keys you give them; they never delete config you removed.
 - In the workflow, resolve the pair once into `env:` with `${{ secrets.NAME || vars.NAME }}` and the rest of the job just uses the env var.
 - `genv --help` (and `genv <command> --help`) document everything; no need to remember flags.
