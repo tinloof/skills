@@ -41,6 +41,7 @@ USAGE
 COMMANDS
   pull     Write GitHub variables to a dotenv file (default: .env)
   push     Set GitHub variables from a dotenv file (default: .env)
+  var      Set a single GitHub variable
   secret   Set a secret, optionally with a fallback variable
   help     Show this help (also: genv <command> --help)
 
@@ -52,6 +53,7 @@ OPTIONS
 EXAMPLES
   genv pull -e production
   genv push -e staging -f .env.stg
+  genv var LOG_LEVEL debug -e production
   genv secret API_KEY --fallback sk-dummy -e production   # value read from stdin
   genv secret DEBUG verbose --fallback off                # repo-level, inline value
 
@@ -105,6 +107,23 @@ USAGE
 EXAMPLES
   genv secret API_KEY sk-real --fallback sk-dummy -e production
   printf '%s' "$TOKEN" | genv secret API_KEY -e production
+EOF
+}
+
+usage_var() {
+  cat <<'EOF'
+genv var — set a single GitHub Actions variable
+
+USAGE
+  genv var <NAME> [value] [-e <env>]
+
+  <NAME>             Variable name
+  [value]            Value; if omitted, read from stdin
+  -e, --env <name>   Environment (default: repository-level; created if missing)
+
+EXAMPLES
+  genv var LOG_LEVEL debug
+  genv var API_URL https://api.example.com -e production
 EOF
 }
 
@@ -165,11 +184,34 @@ cmd_secret() {
   printf '✓ set secret %s%s%s\n' "$n" "${e:+ (env $e)}" "${fb:+ + fallback var}"
 }
 
+cmd_var() {
+  if [ "${1:-}" = set ]; then shift; fi   # tolerate `genv var set NAME`
+  local n='' v='' e='' vset=''
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -e|--env)  [ $# -ge 2 ] || { err "var: --env requires a value"; return 2; }; e="$2"; shift 2 ;;
+      -h|--help) usage_var; return 0 ;;
+      -*)        err "var: unknown option '$1'"; return 2 ;;
+      *)         if [ -z "$n" ]; then n="$1"; else v="$1"; vset=1; fi; shift ;;
+    esac
+  done
+  [ -n "$n" ] || { err "var: missing variable NAME"; echo >&2; usage_var >&2; return 2; }
+  require_gh
+  if [ -n "$e" ]; then ensure_env "$e"; fi
+  if [ -n "$vset" ]; then
+    gh variable set "$n" -b "$v" ${e:+--env "$e"}
+  else
+    gh variable set "$n" ${e:+--env "$e"}
+  fi
+  printf '✓ set variable %s%s\n' "$n" "${e:+ (env $e)}"
+}
+
 if [ $# -eq 0 ]; then usage; exit 0; fi
 cmd="$1"; shift
 case "$cmd" in
   pull)                 cmd_pull "$@" ;;
   push)                 cmd_push "$@" ;;
+  var|variable)         cmd_var "$@" ;;
   secret)               cmd_secret "$@" ;;
   help|-h|--help)       usage ;;
   version|--version)    printf 'genv %s\n' "$VERSION" ;;

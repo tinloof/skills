@@ -25,6 +25,7 @@ command:
 | --- | --- |
 | `genv pull [-e <env>] [-f <file>]` | Write GitHub **variables** → dotenv file (default `.env`) |
 | `genv push [-e <env>] [-f <file>]` | Set GitHub **variables** from a dotenv file |
+| `genv var <NAME> [value] [-e <env>]` | Set a single GitHub **variable** (value via stdin if omitted) |
 | `genv secret <NAME> [value] [--fallback <v>] [-e <env>]` | Set a **secret**, with an optional same-named fallback variable |
 
 - No `-e` targets **repository-level** config; `-e <name>` targets an **environment** (e.g. `production`).

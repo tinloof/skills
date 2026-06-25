@@ -9,6 +9,7 @@ description: Install `genv`, a focused GitHub CLI wrapper for managing a repo's 
 
 - `genv pull [-e <env>] [-f <file>]` — write GitHub **variables** into a dotenv file (default `.env`)
 - `genv push [-e <env>] [-f <file>]` — set GitHub **variables** from a dotenv file (default `.env`)
+- `genv var <NAME> [value] [-e <env>]` — set a single GitHub **variable** (value via stdin if omitted)
 - `genv secret <NAME> [value] [--fallback <value>] [-e <env>]` — set a **secret**, optionally with a fallback variable
 
 With no `-e`, they target **repository-level** config; with `-e <name>`, the named **environment** (e.g. `production`).
@@ -84,6 +85,8 @@ It should print the genv help. Report success and show the usage examples below.
 genv pull                          # repo-level variables → .env
 genv pull -e production            # production variables → .env
 genv push -e staging -f .env.stg   # .env.stg → staging variables
+genv var LOG_LEVEL debug           # set a single repo-level variable
+genv var API_URL https://x -e production   # set one variable in an environment
 
 # Secrets (write-only) + optional fallback variable
 genv secret API_KEY sk-real --fallback sk-dummy -e production
