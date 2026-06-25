@@ -1,4 +1,4 @@
-# dotenv files (may contain real secrets/variables written by `genv pull`)
+# dotenv files (may contain real secrets/variables)
 .env
 .env.*
 !.env.example
